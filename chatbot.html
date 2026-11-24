@@ -40,10 +40,7 @@
   textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
   form button{background:var(--accent);color:var(--accent-text);border:0;border-radius:12px;padding:0 20px;font:inherit;font-weight:600;cursor:pointer}
   form button:disabled{opacity:.5;cursor:not-allowed}
-  .next-row{display:flex;justify-content:flex-end;align-items:center;gap:12px;padding-top:12px}
-  .next-row .hint{color:var(--muted);font-size:.85rem}
-  #next{background:var(--accent);color:var(--accent-text);border:0;border-radius:12px;padding:10px 24px;font:inherit;font-weight:600;cursor:pointer}
-  #next:disabled{opacity:.5;cursor:not-allowed}
+  #next{margin-top:18px;background:var(--accent);color:var(--accent-text);border:0;border-radius:12px;padding:10px 28px;font:inherit;font-weight:600;cursor:pointer}
 </style>
 </head>
 <body>
@@ -53,6 +50,7 @@
   <h1>Choose a chatbot</h1>
   <p class="sub">Select one of the assistants below to start a conversation.</p>
   <div id="grid" class="grid"></div>
+  <button id="next" type="button">Next →</button>
 </section>
 
 <!-- Screen 2: chat -->
@@ -66,10 +64,6 @@
     <textarea id="input" rows="1" placeholder="Type a message…" autocomplete="off"></textarea>
     <button id="send" type="submit">Send</button>
   </form>
-  <div class="next-row">
-    <span id="next-hint" class="hint"></span>
-    <button id="next" type="button" onclick="window.location.href='post-chat-measure.html'">Next →</button>
-  </div>
 </section>
 
 <script>
@@ -101,13 +95,9 @@ function extractReply(data) {
 }
 
 /* =====================================================================
-   3) NEXT BUTTON
-      NEXT_PAGE         = page opened when the participant clicks Next
-      MIN_USER_MESSAGES = messages the participant must send before Next unlocks
-                          (0 = always enabled)
+   3) NEXT BUTTON (on the bot list page): page opened when clicked
    ===================================================================== */
-const NEXT_PAGE = "post-survey.html";
-const MIN_USER_MESSAGES = 0;
+const NEXT_PAGE = "post-chat.html";
 
 /* ===================================================================== */
 
@@ -146,16 +136,7 @@ function addMessage(role, text) {
   return el;
 }
 
-function updateNext() {
-  const sent = (histories[current.id] || []).filter((m) => m.role === "user").length;
-  const remaining = MIN_USER_MESSAGES - sent;
-  $("next").disabled = remaining > 0;
-  $("next-hint").textContent = remaining > 0
-    ? "Send " + remaining + " more message" + (remaining > 1 ? "s" : "") + " to continue."
-    : "";
-}
-
-$("next").onclick = () => { if (!$("next").disabled) window.location.href = NEXT_PAGE; };
+$("next").onclick = () => { window.location.href = NEXT_PAGE; };
 
 function openBot(bot) {
   current = bot;
@@ -166,7 +147,6 @@ function openBot(bot) {
   histories[bot.id].forEach((m) => addMessage(m.role, m.text));
   if (!histories[bot.id].length) addMessage("bot", "Hi! How can I help?");
   show("chat-view");
-  updateNext();
   $("input").focus();
 }
 
@@ -194,7 +174,6 @@ async function sendMessage(text) {
     typing.remove();
     addMessage("bot", reply);
     histories[bot.id].push({ role: "bot", text: reply });
-    updateNext();
   } catch (err) {
     typing.remove();
     addMessage("error", "Could not reach the bot. " + err.message);
