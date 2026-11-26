@@ -221,32 +221,39 @@ function scale(text, i, lo, hi) {
 }
 
 // PAGE 1: Consent.
+
 function initConsent() {
-  $("#consent-form")?.addEventListener("submit", async e => {
+  const form = $("#consent-form");
+
+  if (!form) return;
+
+  form.addEventListener("submit", async e => {
     e.preventDefault();
 
-    if (!e.currentTarget.reportValidity()) return;
-
-    const consent = Object.fromEntries(
-      new FormData(e.currentTarget)
-    );
+    // Browser validates that all required checkboxes are selected.
+    if (!form.reportValidity()) return;
 
     try {
+      // Send only "Yes" as the consent value.
       await post("consent", {
         session_id: sid(),
         prolific_pid: getProlificPid(),
-        consent
+        consent: "Yes"
       });
 
       save({
-        consent,
+        consent: "Yes",
         consented: true
       });
 
       location.href = "demographics.html";
 
-    } catch (x) {
-      $("#consent-error").textContent = x.message;
+    } catch (error) {
+      const errorElement = $("#consent-error");
+
+      if (errorElement) {
+        errorElement.textContent = error.message;
+      }
     }
   });
 }
